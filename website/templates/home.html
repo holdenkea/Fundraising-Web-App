@@ -1,0 +1,93 @@
+{% extends "base.html" %} 
+
+{% block title %}State and City Search{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Home</h1>
+    <form id="stateCityForm" action="/submit" method="POST">
+        <input type="hidden" id="cityHref" name="cityHref">
+
+        <div class="form-group" style="position: relative;">
+            <label for="stateSearch">State:</label>
+            <input type="text" id="stateSearch" name="state" class="form-control" placeholder="Search for a state" oninput="fetchStates(); validateForm();">
+            <div id="stateDropdown" class="dropdown-menu" style="display: none;"></div>
+        </div>
+        <div class="form-group">
+            <label for="citySelect">City:</label>
+            <select id="citySelect" name="city" class="form-control" onchange="validateForm();">
+                <option value="">Select a state first</option>
+            </select>
+        </div>
+        <button type="submit" id="submitButton" class="btn btn-primary" disabled>Submit</button>
+    </form>
+</div>
+
+<script>
+    async function fetchStates() {
+        const input = document.getElementById('stateSearch').value;
+        if (input.length < 2) { // Start searching after 2 characters
+            document.getElementById('stateDropdown').innerHTML = '';
+            document.getElementById('stateDropdown').style.display = 'none';
+            return;
+        }
+
+        const response = await fetch(`/states?query=${encodeURIComponent(input)}`);
+        const states = await response.json();
+        const stateDropdown = document.getElementById('stateDropdown');
+        stateDropdown.innerHTML = ''; // Clear existing dropdown options
+
+        states.forEach(state => {
+            const option = document.createElement('a');
+            option.href = '#';
+            option.classList.add('dropdown-item');
+            option.textContent = state;
+            option.onclick = () => selectState(state);
+            stateDropdown.appendChild(option);
+        });
+
+        // Show dropdown if there are matches
+        if (states.length > 0) {
+            stateDropdown.style.display = 'block';
+        } else {
+            stateDropdown.style.display = 'none';
+        }
+    }
+
+    async function selectState(state) {
+        document.getElementById('stateSearch').value = state;
+        document.getElementById('stateDropdown').style.display = 'none'; // Hide dropdown after selection
+
+        const response = await fetch(`/cities/${encodeURIComponent(state)}`);
+        const cities = await response.json();
+
+        const citySelect = document.getElementById('citySelect');
+        citySelect.innerHTML = '<option value="">Select a city</option>'; // Reset options
+
+        cities.forEach(city => {
+            const option = document.createElement('option');
+            option.value = city.city;
+            option.textContent = city.city;
+            citySelect.appendChild(option);
+        });
+
+        citySelect.addEventListener('change', function() {
+            const selectedCity = cities.find(city => city.city === this.value);
+            document.getElementById('cityHref').value = selectedCity.href;  // Update hidden field with href
+        });
+    }
+
+    async function validateForm() {
+        const state = document.getElementById('stateSearch').value.trim();
+        const city = document.getElementById('citySelect').value;
+        const submitButton = document.getElementById('submitButton');
+
+        if (state !== "" && city !== "") {
+            submitButton.disabled = false;
+        } 
+        else {
+            submitButton.disabled = true;
+        }
+    }
+</script>
+{% endblock %}
