@@ -1,17 +1,24 @@
-# Fundraising-Web-App
+## Table of Contents
+- [About](#about)
+- [Getting Started](#getting-started)
+- [Running](#running-the-program)
+- [License](#license)
+- [Acknowledgements](#acknowledgements)
+
+## About
 Python and Flask web app that produces businesses offering fundraising opportunities within a given city.
 
-# About
 description about web app, mongodb, web crawler
 
-# Getting Started
+## Getting Started
+dfad
 
-# Dependencies
+## Dependencies
 
-# Running the Program
+## Running the Program
 
-# License
+## License
 
-# Acknowledgements
+## Acknowledgements
 Mention youtuber who wrote flask framework tutorial
 
