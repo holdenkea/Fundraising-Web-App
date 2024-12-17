@@ -8,16 +8,24 @@ from .__init__ import locationsCollection
 
 views = Blueprint('views', __name__)  # sets up a Blueprint for flask application
 
+#route for the home page
 @views.route('/')   #homepage so we use slash '/' and will run the function everytime we go to the '/' route
 @login_required     #cannot get to home page unless you are logged in
 def home():
     return render_template("home.html", user=current_user)
 
+#route for the submit button on the home page
 @views.route('/submit', methods=['POST'])
 def submit():
     state = request.form.get('state')
     city = request.form.get('city')
     cityHref = request.form.get('cityHref')
+    place = request.form.get('place')
+    # cities and states should be in database at this point
+    # need to take the state, city, and cityHref and go into the cityHref
+
+
+
 
     #call fundscraper to build the query to get the coordinates for the city
     #buildMapsPlaceQuery(city, state, place_type) FROM FUNDSCRAPER

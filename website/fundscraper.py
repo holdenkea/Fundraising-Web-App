@@ -12,10 +12,10 @@ from .__init__ import usersCollection, locationsCollection
 
 from pymongo.mongo_client import MongoClient
 
-from concurrent.futures import ThreadPoolExecutor, as_completed # allows us to use a context manager to give our run function to
-# **********************************************************************************************************
+# gives the run function to a context manager for multithread execution
+from concurrent.futures import ThreadPoolExecutor, as_completed 
+
 # Used to set the browser options, in this case for the Chrome Webdriver
-# **********************************************************************************************************
 def setOptionsForBrowser():
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
@@ -146,7 +146,7 @@ def getAllCityLists(href):
             EC.presence_of_element_located((By.CSS_SELECTOR, '.wikitable.sortable.jquery-tablesorter'))
         )
 
-        # accounts for structural differences in wikipedia pages account for different element names 
+        # edge case for structural differences in wikipedia pages account for different element names 
         if table.find_element(By.TAG_NAME, 'a').get_attribute('title') == 'County seat':  
             table = browser.find_element(By.CSS_SELECTOR, '.wikitable.sortable.plainrowheaders.jquery-tablesorter')
 
