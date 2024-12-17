@@ -14,15 +14,19 @@ password = urllib.parse.quote_plus(credentials.get('DATABASE_PASSWORD'))
 cluster = credentials.get('DATABASE_CLUSTER')
 identifier = credentials.get('DATABASE_IDENTIFIER')
 
+#credentials for MongoDB
 uri = 'mongodb+srv://' + username + ':' + password + '@' + cluster + '.' + identifier + '.mongodb.net/'
 client = MongoClient(uri)
 
+#gets all of the users in the database
 user_db = client.user_db
 usersCollection = user_db["user_collection"]
 
+#gets all of the locations in the database 
 location_db = client.location_db
 locationsCollection = location_db["location_collection"]
 
+#checks the connection to the database
 def check_connection():
     try:
         client.admin.command('ping')
@@ -30,26 +34,32 @@ def check_connection():
     except Exception as e:
         print("e")
 
-def create_app():                       #how flask is initialized
+#initializes the flask web app
+def create_app():                       
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = credentials.get('SECRET_KEY')   #for encrypting and securing session data
+
+    #encrypts and secures the session data
+    app.config['SECRET_KEY'] = credentials.get('SECRET_KEY')   
     app.config['DATABASE_URI'] = uri
 
-    from .views import views    #telling flask that we have blueprints that have different urls for application
-    from .auth import auth      #same for auth
+    #importing the blueprints that contain the url locations for the application
+    from .views import views    
+    from .auth import auth     
 
-    app.register_blueprint(views, url_prefix='/') #to access whatever is inside of views, it needs to be prefixed by whatever
-                                                  #is assigned to url_prefix, slash means no prefix
+    #makes '/' the prefix needed to access whatever is inside of views and auth blueprints
+    app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(auth, url_prefix='/')
 
-    from .models import User,Place #to make sure we load models.py before we initialize and find database
+    #imports the User and Place classes from models
+    from .models import User,Place 
 
     check_connection()
     create_users_database()
     create_location_database()
 
+    #how flask redirects user if user is not logged in
     login_manager = LoginManager()
-    login_manager.login_view = 'auth.login'    #where flask redirects user if user is not logged in
+    login_manager.login_view = 'auth.login'
     login_manager.init_app(app)                
 
     @login_manager.user_loader
@@ -70,7 +80,7 @@ def create_app():                       #how flask is initialized
         else:
             return None
     
-    # Uncomment below to scrape wikipedia page about municipalities wikipedia page   
+    #Scrapes wikipedia page about municipalities wikipedia page   
     #import werkzeug.serving
     #if not werkzeug.serving.is_running_from_reloader():
     #    print("scrapeWiki call")
