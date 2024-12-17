@@ -10,7 +10,7 @@
 
         <div class="form-group" style="position: relative;">
             <label for="stateSearch">State:</label>
-            <input type="text" id="stateSearch" name="state" class="form-control" placeholder="Search for a state" oninput="fetchStates(); validateForm();">
+            <input type="text" id="stateSearch" name="state" class="form-control" placeholder="Type the state you want to search" oninput="fetchStates(); validateForm();">
             <div id="stateDropdown" class="dropdown-menu" style="display: none;"></div>
         </div>
         <div class="form-group">
@@ -20,10 +20,13 @@
             </select>
         </div>
         <div class="form-group">
-            <label for="placeSelect">What type of place would you like to search for fundraising?</label>
+            <label for="placeSelect">Fundraising Category:</label>
             <select id="placeSelect" name="place" class="form-control" onchange="validateForm();">
-                <option value="">Select a place type</option>
-            </select>
+                <option value="" selected disabled>Select a fundraising category</option>
+                {% for place in places %}
+                    <option value="{{ place }}">{{ place }}</option>
+                {% endfor %}           
+             </select>
         </div>
         <button type="submit" id="submitButton" class="btn btn-primary" disabled>Submit</button>
     </form>
@@ -83,12 +86,17 @@
         });
     }
 
+    async function selectPlace(place) {
+        document.getElementById('placeSelect').value;
+    }
+
     async function validateForm() {
         const state = document.getElementById('stateSearch').value.trim();
         const city = document.getElementById('citySelect').value;
+        const place = document.getElementById('placeSelect').value;
         const submitButton = document.getElementById('submitButton');
 
-        if (state !== "" && city !== "") {
+        if (state !== "" && city !== "" && place != "") {
             submitButton.disabled = false;
         } 
         else {

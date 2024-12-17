@@ -33,6 +33,8 @@ services:
     build: .
     ports:
       - "5000:5000"
+    volumes:
+      - C:\Users\HOLDE\Desktop\Fundraising-Web-App:/app
     working_dir: /app
     command: python main.py
     depends_on:

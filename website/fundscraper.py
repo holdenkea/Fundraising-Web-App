@@ -40,49 +40,52 @@ def setOptionsForBrowser():
     
     return browser
 
-# **********************************************************************************************************
-# Below functions used for finding fundraising opportunities near someone  
-# functions: buildPlaceQuery, scrapePlaceData
-#   buildPlaceQuery-takes a city, state, and placeRequested and builds the correct URL for google maps                
-#       - also calls scrapePlaceData and passes it the built URL, city, state, and type of place requested
-#   scrapePlaceData-gets the name and URL of every Place near the requested area
-# **********************************************************************************************************
-
-# restaurants, things to do, dessert/cafe/boba/bakery are all places that can be requested
-def buildMapsPlaceQuery(city, state):
-    placeOptions = [
+#different place types to research from
+placeOptions = [
         "restaurants",
         "dessert",
-        "things+to+do"
+        "things to do"
     ]
 
-    for place in placeOptions:
-        queryURL = f"https://www.google.com/maps/search/{place}+near+{city}+{state}"
-       
-        #add concurrency here
-        getAllPlacesNearby(queryURL, city, state)
+# restaurants, things to do, dessert/cafe/boba/bakery are all places that can be requested
+def buildMapsPlaceQuery(city, state, place):
+    #if place has a space, replace space with
 
-def getAllPlacesNearby(queryURL, city, state):
+    queryURL = f"https://www.google.com/maps/search/{place}+near+{city}+{state}"
+    getAllPlaceLists(queryURL)
+
+def getAllPlaceLists(queryURL):
     browser = setOptionsForBrowser()
     browser.get(queryURL)
+    start_time = time.time()
 
-# scrape all businesses in area with selenium
-# and get the list of all websites in the area
+    try:
+        #get correct hrefs for a google maps place here 
+    except Exception as e:
+        printf(f"Error waiting for : " {e})
 
-# list of all websites
-# for website in websites
+    finally:
+        browser.quit()
 
-# if website uses javascript
-#   scrape using selenium
-# else
-#   scrape using something else
+    #once all hrefs are gotten
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(checkAllFundraising, href) for href in hrefs]
+        for future in as_completed(futures):
+            future.result()
 
-# **********************************************************************************************************
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"scraping took: {elapsed_time: .2f} seconds")
+
+def checkAllFundraising(href):
+    browser = setOptionsForBrowser()
+    browser.get(href)
+
+    #code here to check each website for fundraising opportunities
+
 # Below functions used to scrape Wikipedia for all municipalities by state
-#   - this data is later used for the autofill dropdown menu on the frontend which filters by state and city
+# data is later used for the autofill dropdown menu on the frontend which filters by state and city
 # Not called every time app is ran
-# **********************************************************************************************************
-
 def buildWikiQuery():
     queryURL = "https://en.wikipedia.org/wiki/Category:Lists_of_cities_in_the_United_States_by_state"
     getAllStateLists(queryURL)

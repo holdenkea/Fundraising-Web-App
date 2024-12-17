@@ -3,7 +3,7 @@
 
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user #current user used to detect if user is logged in or not
-
+from website.fundscraper import placeOptions
 from .__init__ import locationsCollection
 
 views = Blueprint('views', __name__)  # sets up a Blueprint for flask application
@@ -12,7 +12,7 @@ views = Blueprint('views', __name__)  # sets up a Blueprint for flask applicatio
 @views.route('/')   #homepage so we use slash '/' and will run the function everytime we go to the '/' route
 @login_required     #cannot get to home page unless you are logged in
 def home():
-    return render_template("home.html", user=current_user)
+    return render_template("home.html", user=current_user, places=placeOptions)
 
 #route for the submit button on the home page
 @views.route('/submit', methods=['POST'])
@@ -21,14 +21,9 @@ def submit():
     city = request.form.get('city')
     cityHref = request.form.get('cityHref')
     place = request.form.get('place')
-    # cities and states should be in database at this point
-    # need to take the state, city, and cityHref and go into the cityHref
 
-
-
-
-    #call fundscraper to build the query to get the coordinates for the city
-    #buildMapsPlaceQuery(city, state, place_type) FROM FUNDSCRAPER
+    #call buildMapsPlaceQuery in fundscraper
+    #buildMapsPlaceQuery(city, state, place) 
 
     #return f'State: {state}, City: {city}, Href: {cityHref}'
 
