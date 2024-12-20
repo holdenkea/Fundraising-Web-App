@@ -26,6 +26,10 @@ usersCollection = user_db["user_collection"]
 location_db = client.location_db
 locationsCollection = location_db["location_collection"]
 
+#gets all of the places in the database
+place_db = client.place_db
+placesCollection = place_db["place_db"]
+
 #checks the connection to the database
 def check_connection():
     try:
