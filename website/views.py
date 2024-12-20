@@ -3,7 +3,7 @@
 
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user #current user used to detect if user is logged in or not
-from website.fundscraper import placeOptions
+from website.fundscraper import placeOptions, buildMapsPlaceQuery
 from .__init__ import locationsCollection
 
 views = Blueprint('views', __name__)  # sets up a Blueprint for flask application
@@ -19,11 +19,10 @@ def home():
 def submit():
     state = request.form.get('state')
     city = request.form.get('city')
-    cityHref = request.form.get('cityHref')
     place = request.form.get('place')
 
     #call buildMapsPlaceQuery in fundscraper
-    #buildMapsPlaceQuery(city, state, place) 
+    buildMapsPlaceQuery(city, state, place) 
 
     #return f'State: {state}, City: {city}, Href: {cityHref}'
 

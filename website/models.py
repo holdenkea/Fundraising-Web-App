@@ -29,25 +29,29 @@ class User(UserMixin):
         return str(self.id)
 
 class Place:
-    def __init__(self, id = None, name = None, website = None):
+    def __init__(self, id = None, name = None, website = None, phone = None, address = None, hasFundraising = None):
         self.id = id
         self.name = {'name' : name}
         self.website = {'website' : website}
+        self.phone = {'phone' : phone}
+        self.address = {'address' : address}
+        self.hasFundraising = {'hasFundraising' : hasFundraising}
     
-    def create_document(self):
-        newDoc = {}
-        newDoc |= self.name
-        newDoc |= self.website
-        return newDoc
+    #def create_document(self):
+    #    newDoc = {}
+    #    newDoc |= self.name
+    #    newDoc |= self.website
+    #    newDoc |= self.hasFundraising
+    #    return newDoc
     
-    def documentToPlaceInst(placeDocument):
-        if placeDocument:
-            return Place(
-                id = placeDocument.get('_id'),
-                name = placeDocument.get('name'),
-                website = placeDocument.get('website'),
-            )
-        return None
+    #def documentToPlaceInst(placeDocument):
+    #    if placeDocument:
+    #        return Place(
+    #            id = placeDocument.get('_id'),
+    #            name = placeDocument.get('name'),
+    #            website = placeDocument.get('website'),
+    #        )
+    #    return None
 
-    def get_id(self):
-        return str(self.id)
+    #def get_id(self):
+    #    return str(self.id)

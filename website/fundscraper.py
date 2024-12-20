@@ -1,14 +1,16 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import StaleElementReferenceException
 
 import urllib3
 import time
 from time import sleep
 
 from .models import Place
-from .__init__ import usersCollection, locationsCollection
+from .__init__ import usersCollection, locationsCollection, placesCollection
 
 from pymongo.mongo_client import MongoClient
 
@@ -40,6 +42,24 @@ def setOptionsForBrowser():
     
     return browser
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #different place types to research from
 placeOptions = [
         "restaurants",
@@ -49,39 +69,120 @@ placeOptions = [
 
 # restaurants, things to do, dessert/cafe/boba/bakery are all places that can be requested
 def buildMapsPlaceQuery(city, state, place):
-    #if place has a space, replace space with
-
+    query = f"{place} near {city} {state}"  
     queryURL = f"https://www.google.com/maps/search/{place}+near+{city}+{state}"
-    getAllPlaceLists(queryURL)
+    
+    getAllPlaceLists(queryURL, query)
 
-def getAllPlaceLists(queryURL):
+def getAllPlaceLists(queryURL, query):
     browser = setOptionsForBrowser()
     browser.get(queryURL)
     start_time = time.time()
 
     try:
-        #get correct hrefs for a google maps place here 
-    except Exception as e:
-        printf(f"Error waiting for : " {e})
+        resultsSideBar = WebDriverWait(browser,10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, f"div[aria-label='Results for {query}']"))
+        )
 
+        #filter sidebar to ultimately get the name of place and href of the place
+        foundEnd = False
+        placePreviews = []  #Restaurant google maps preview list
+
+        while(foundEnd == False):
+            restaurant = browser.find_elements(By.XPATH, '//div//a[@class="hfpxzc"]') #this path means searching if the element hfpxzc could be inside //div//a
+
+            for i in range(len(restaurant)):
+                if restaurant[i].get_attribute("href") not in placePreviews:
+                    placePreviews.append(restaurant[i].get_attribute("href")) 
+
+            resultsSideBar.send_keys(Keys.PAGE_DOWN)
+            resultsSideBar.send_keys(Keys.PAGE_DOWN)
+
+            html = browser.find_element(By.TAG_NAME, "html").get_attribute('outerHTML')
+           
+            if(html.find("You've reached the end of the list.")!=-1):
+                foundEnd = True
+
+    except Exception as e:
+        print(f"Error waiting for navbox: {e}")
+    
     finally:
         browser.quit()
 
-    #once all hrefs are gotten
+    #once all hrefs are gotten get all places and their attributes
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(checkAllFundraising, href) for href in hrefs]
+        futures = [executor.submit(getPlaceAttributes, previewURL) for previewURL in [placePreviews]]
         for future in as_completed(futures):
             future.result()
+
+
+
+    #now, go through all of the places' actual websites and check if they have fundraising
+    #with ThreadPoolExecutor() as executor:
+    #    futures = [executor.submit()]
 
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"scraping took: {elapsed_time: .2f} seconds")
 
-def checkAllFundraising(href):
+def getPlaceAttributes(previewURL):
     browser = setOptionsForBrowser()
-    browser.get(href)
+    curPlace = Place('','','','')
 
-    #code here to check each website for fundraising opportunities
+    try:
+        browser.get(previewURL)
+    except StaleElementReferenceException:
+        pass
+
+    placeName = browser.find_element(By.CLASS_NAME, 'a5H0ec').get_attribute
+    curPlace.name = placeName
+    
+    infoBar = browser.find_elements(By.XPATH,'//*[@class="CsEnBe"]') #list of specific rows from info bar
+    for k in range(len(infoBar)): 
+        try:
+            attribute = infoBar[k].get_attribute("aria-label")
+        except StaleElementReferenceException:
+            pass
+
+        if('Website: ' in attribute):
+            website = attribute.replace('Website: ', 'https://')
+            curPlace.website = website
+        elif('Phone: ' in attribute):
+            curPlace.phone = attribute
+        elif('Address: ' in attribute):
+            curPlace.address = attribute
+
+    insertCurPlace(curPlace)
+
+    #now logic needed to go into the place's website and check if it has fundraising or not
+
+def insertCurPlace(curPlace):
+    document = {}
+    document |= {'name' : curPlace.name}
+    document |= {'website' : curPlace.website}
+    document |= {'phone' : curPlace.phone}
+    document |= {'address' : curPlace.address}
+
+    placesCollection.insert_one(document)
+
+#def checkForFundraising():
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Below functions used to scrape Wikipedia for all municipalities by state
 # data is later used for the autofill dropdown menu on the frontend which filters by state and city
