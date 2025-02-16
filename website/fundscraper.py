@@ -1,3 +1,11 @@
+# convert selenium to playwright
+# i cant believe i didn't use element.click on selenium
+
+# switch to playwright because it is faster
+
+
+
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -20,7 +28,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 # Used to set the browser options, in this case for the Chrome Webdriver
 def setOptionsForBrowser():
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+   # options.add_argument("--headless")
     options.page_load_strategy = 'normal' # normal is waiting until entire webpage like CSS, images, frames, are loaded
                                           # there is also eager, meaning DOM is accessable and ready to interact
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
@@ -41,22 +49,6 @@ def setOptionsForBrowser():
         return
     
     return browser
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -111,52 +103,65 @@ def getAllPlaceLists(queryURL, query):
 
     #once all hrefs are gotten get all places and their attributes
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(getPlaceAttributes, previewURL) for previewURL in [placePreviews]]
+        futures = [executor.submit(getPlaceAttributes, previewURL) for previewURL in placePreviews]
         for future in as_completed(futures):
             future.result()
-
-
-
-    #now, go through all of the places' actual websites and check if they have fundraising
-    #with ThreadPoolExecutor() as executor:
-    #    futures = [executor.submit()]
 
     end_time = time.time()
     elapsed_time = end_time - start_time
     print(f"scraping took: {elapsed_time: .2f} seconds")
 
 def getPlaceAttributes(previewURL):
+    print("Getting attributes for " + previewURL + '\n')
+
     browser = setOptionsForBrowser()
     curPlace = Place('','','','')
+
+    #WAIT FOR THE URL TO POP UP FOR A SECOND
 
     try:
         browser.get(previewURL)
     except StaleElementReferenceException:
         pass
 
-    placeName = browser.find_element(By.CLASS_NAME, 'a5H0ec').get_attribute
-    curPlace.name = placeName
+    xpaths = [
+        '//h1[@class="DUwDvf lfPIob"]',
+        '//div[@class="qBF1Pd fontHeadlineSmall ',
+        '//div[@class="qBF1Pd fontHeadlineSmall kiIech Hi2drd"]'
+    ]
+
+    for xpath in xpaths:
+        try:
     
+            #FIX THIS STILL
+            placeElement = WebDriverWait(browser, 10).until(
+                EC.presence_of_element_located((By.XPATH, xpath))
+            )
+            curPlace.name = placeElement.text
+            break
+        except:
+            print(f"Could not find element with xpath {xpath}" + '\n')
+            continue
+
     infoBar = browser.find_elements(By.XPATH,'//*[@class="CsEnBe"]') #list of specific rows from info bar
     for k in range(len(infoBar)): 
         try:
             attribute = infoBar[k].get_attribute("aria-label")
         except StaleElementReferenceException:
-            pass
+            attribute = None
 
-        if('Website: ' in attribute):
-            website = attribute.replace('Website: ', 'https://')
-            curPlace.website = website
-        elif('Phone: ' in attribute):
-            curPlace.phone = attribute
-        elif('Address: ' in attribute):
-            curPlace.address = attribute
-
-    insertCurPlace(curPlace)
-
-    #now logic needed to go into the place's website and check if it has fundraising or not
-
-def insertCurPlace(curPlace):
+        if attribute:
+            if('Website: ' in attribute):
+                print(curPlace.name + " has a website")
+                website = attribute.replace('Website: ', 'https://')
+                curPlace.website = website
+            elif('Phone: ' in attribute):
+                print(curPlace.name + " has a phone")
+                curPlace.phone = attribute
+            elif('Address: ' in attribute):
+                print(curPlace.name + " has an address")
+                curPlace.address = attribute
+    
     document = {}
     document |= {'name' : curPlace.name}
     document |= {'website' : curPlace.website}
@@ -165,23 +170,11 @@ def insertCurPlace(curPlace):
 
     placesCollection.insert_one(document)
 
+    browser.quit()
+
+    #now logic needed to go into the place's website and check if it has fundraising or not
+
 #def checkForFundraising():
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # Below functions used to scrape Wikipedia for all municipalities by state
@@ -295,3 +288,4 @@ def getAllCityLists(href):
 #           (java -jar selenium-server-4.23.0.jar standalone --selenium-manager true)
 # Once this is started Grid is ran on local machine
 # **********************************************************************************************************
+
