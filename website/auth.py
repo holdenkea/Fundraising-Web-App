@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from .models import User
 from werkzeug.security import generate_password_hash, check_password_hash
-from .__init__ import usersCollection
+from . import db
 from flask_login import login_user, login_required, logout_user, current_user
 
 auth = Blueprint('auth', __name__)  # sets up a Blueprint for flask application
@@ -12,7 +12,7 @@ def login():
         email = request.form.get('email')           #email from the form sent
         password = request.form.get('password')     #password from the form sent
 
-        userDocument = usersCollection.find_one( { "email" : email })   #finding email from database that matches one on form sent
+        userDocument = db.usersCollection.find_one( { "email" : email })   #finding email from database that matches one on form sent
         user = User.documentToUserInst(userDocument)                    #from to userInstance, this is now user from DB
         
         if user:
@@ -41,7 +41,7 @@ def sign_up():
         password1 = request.form.get('password1')
         password2 = request.form.get('password2')
     
-        user = usersCollection.find_one( { "email" : email })
+        user = db.usersCollection.find_one( { "email" : email })
         if user:
             flash('Email already exists.', category='error')
         elif len(email) < 4:
@@ -57,7 +57,7 @@ def sign_up():
             newUser = User(email = email, firstName = firstName, password = password1)
             
             newUserDocument = newUser.create_document()
-            usersCollection.insert_one(newUserDocument)
+            db.usersCollection.insert_one(newUserDocument)
 
             login_user(newUser, remember=True)
             flash('Account created!', category='success')

@@ -3,8 +3,10 @@
 
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user #current user used to detect if user is logged in or not
-from website.fundscraper import placeOptions, buildMapsPlaceQuery
-from .__init__ import locationsCollection
+
+# from website.fundscraper import placeOptions, buildMapsPlaceQuery
+from website.scrape_google_places import placeOptions, buildMapsQuery
+from . import db
 
 views = Blueprint('views', __name__)  # sets up a Blueprint for flask application
 
@@ -22,21 +24,25 @@ def submit():
     place = request.form.get('place')
 
     #call buildMapsPlaceQuery in fundscraper
-    buildMapsPlaceQuery(city, state, place) 
+    # buildMapsPlaceQuery(city, state, place) 
 
+    # call buildMapsQuery in scrape_wiki_cities
+    buildMapsQuery(city, state, place)
+
+    exit(3)
     #return f'State: {state}, City: {city}, Href: {cityHref}'
 
 #below routes bring the database states to be used in the frontend
 @views.route('/states')
 def get_states():
     query = request.args.get('query','')
-    states_cursor = locationsCollection.find({"state": {"$regex": query, "$options": "i"}}, {"_id": 0, "state": 1})
+    states_cursor = db.locationsCollection.find({"state": {"$regex": query, "$options": "i"}}, {"_id": 0, "state": 1})
     statesList = [state["state"] for state in states_cursor]
     return jsonify(statesList)
 
 @views.route('/cities/<state>')
 def get_cities(state):
-    stateDocument  = locationsCollection.find_one({"state": state}, {"_id": 0, "cities": 1})
+    stateDocument  = db.locationsCollection.find_one({"state": state}, {"_id": 0, "cities": 1})
     if not stateDocument or "cities" not in stateDocument:
         return jsonify([])
 
