@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from bson import ObjectId
 from .models import User
 from . import db
+from .scrape_wiki_cities import main
 
 #initializes the flask web app
 def create_app():                       
@@ -54,10 +55,10 @@ def create_app():
             return None
     
     #Scrapes wikipedia page about municipalities wikipedia page   
-    #import werkzeug.serving
-    #if not werkzeug.serving.is_running_from_reloader():
-    #    print("scrapeWiki call")
-    #    scrape_wiki_locations()
+    import werkzeug.serving
+    if not werkzeug.serving.is_running_from_reloader():
+        print("scrapeWiki call")
+        scrape_wiki_locations()
 
 
     return app
@@ -69,5 +70,6 @@ def scrape_wiki_locations():
     #from .fundscraper import buildWikiQuery
     #buildWikiQuery()
     # this calls th
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(run(db.locationsCollection))
+
+    #loop = asyncio.get_event_loop()
+    asyncio.run(main())

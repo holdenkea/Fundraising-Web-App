@@ -38,16 +38,22 @@ def get_states():
     query = request.args.get('query','')
     states_cursor = db.locationsCollection.find({"state": {"$regex": query, "$options": "i"}}, {"_id": 0, "state": 1})
     statesList = [state["state"] for state in states_cursor]
+    statesList.sort()
+
     return jsonify(statesList)
 
 @views.route('/cities/<state>')
 def get_cities(state):
     stateDocument  = db.locationsCollection.find_one({"state": state}, {"_id": 0, "cities": 1})
+    print(stateDocument)
+
     if not stateDocument or "cities" not in stateDocument:
         return jsonify([])
 
     cities = stateDocument["cities"]
-    city_list = [{"city": city["city"], "href": city.get("href", "")} for city in cities if "city" in city]
+    cities = sorted(cities)
+
+    city_list = [{"city": city} for city in cities]
 
     return jsonify(city_list)
 
