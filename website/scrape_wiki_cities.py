@@ -9,6 +9,29 @@ states = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 
              'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina',
              'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'] 
 
+
+async def process_row(row):
+
+    class_attribute = await row.get_attribute('class')
+    if class_attribute == 'sortbottom':
+        return None  # End of table
+
+    city_element = await row.query_selector('a')
+    if not city_element:
+        print(f"returning NONE from process row")
+
+        return None
+
+    city = await city_element.text_content()
+    if city:
+        city_document = {}
+        city_document |= {'city' : city}
+        print(f"RETURNING CITY: {city} from process row")
+        return city
+
+    return None
+
+
 async def fetch_cities_for_state(state_href, page):
     try:   
         await page.goto(state_href)
@@ -33,6 +56,31 @@ async def fetch_cities_for_state(state_href, page):
         rows = await table_body.query_selector_all('tr')
 
         cities_documents = []
+        
+        # processing 10 rows per chunk
+        chunk_size = 23
+        chunks = []
+        chunks = [rows[i:i + chunk_size] for i in range(0, len(rows), chunk_size)]
+
+        for chunk in chunks:
+            tasks = []
+            #cities_documents = []
+
+            for row in chunk:
+                tasks.append(process_row(row))
+                # print("Processing Row")
+
+            results = await asyncio.gather(*tasks)
+
+            # Ensure each result is properly structured before appending
+            for res in results:
+                cities_documents.append(res)
+
+                
+
+        """
+        cities_documents = []
+
         for row in rows:
         
             class_attribute = await row.get_attribute('class')
@@ -50,12 +98,11 @@ async def fetch_cities_for_state(state_href, page):
                 cities_documents.append(city_document)
                 #cities.append(city)
                 print(f"APPENDING CITY: {city} TO CITY DOCUMENT")
-
-       
+        """
         print(f"UPDATING STATE IN DATABASE WITH HREF: {state_href}")
         locationsCollection.update_one(
             {"href" : state_href},
-            {"$set" : {"cities" : cities_documents}}
+            { "$push": {"cities" : {"$each" : cities_documents}} }
         )   
 
         #print(f"RETURNING FROM STATE WITH HREF: {state_href}")
@@ -126,8 +173,23 @@ async def run(playwright: Playwright, locationsCollection) -> None:
     await browser.close()
 
 async def main() -> None:
+    import time
     async with async_playwright() as playwright:
-        await run(playwright, locationsCollection)
 
+        start_time = time.time()
+        await run(playwright, locationsCollection)
+        end_time = time.time()
+
+        total_time = end_time - start_time
+        print(f"The end time for crawling is: {total_time}")
 
 # asyncio.run(main())
+
+#time to add to database no chunking for table
+#The end time for crawling is: 202.46524262428284
+
+#chunk size 10: 171
+#chunk size 50: 155
+#chunk size 30: 148.22796392440796
+#chunk size 23: 146.3689410686493
+#chunk size 18: 147.41725087165833
