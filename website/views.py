@@ -3,9 +3,12 @@
 
 from flask import Blueprint, render_template, jsonify, request
 from flask_login import login_required, current_user #current user used to detect if user is logged in or not
+from .scrape_google_places import google_main
+import asyncio
+
 
 # from website.fundscraper import placeOptions, buildMapsPlaceQuery
-from website.scrape_google_places import placeOptions, buildMapsQuery
+from website.scrape_google_places import placeOptions
 from . import db
 
 views = Blueprint('views', __name__)  # sets up a Blueprint for flask application
@@ -26,8 +29,8 @@ def submit():
     #call buildMapsPlaceQuery in fundscraper
     # buildMapsPlaceQuery(city, state, place) 
 
-    # call buildMapsQuery in scrape_wiki_cities
-    buildMapsQuery(city, state, place)
+    # call scrape_maps_places function in scrape_google_places
+    asyncio.run(google_main(city, state, place))
 
     exit(3)
     #return f'State: {state}, City: {city}, Href: {cityHref}'
