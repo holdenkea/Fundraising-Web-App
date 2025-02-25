@@ -1,6 +1,6 @@
 import asyncio
 from playwright.async_api import Playwright, async_playwright
-from .db import locationsCollection
+from .db import locationsCollection, placesCollection
 
 
 states = ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 
@@ -76,34 +76,19 @@ async def fetch_cities_for_state(state_href, page):
             for res in results:
                 cities_documents.append(res)
 
-                
-
-        """
-        cities_documents = []
-
-        for row in rows:
-        
-            class_attribute = await row.get_attribute('class')
-            
-            #checks for the end of the table    
-            if class_attribute == 'sortbottom':    
-                break
-
-            city_element = await row.query_selector('a')
-            city = await city_element.text_content()
-
-            if city:
-                city_document = {}
-                city_document |= {'city' : city}
-                cities_documents.append(city_document)
-                #cities.append(city)
-                print(f"APPENDING CITY: {city} TO CITY DOCUMENT")
-        """
-        print(f"UPDATING STATE IN DATABASE WITH HREF: {state_href}")
+        print(f"UPDATING STATE IN locations collection WITH HREF: {state_href}")
         locationsCollection.update_one(
             {"href" : state_href},
-            { "$push": {"cities" : {"$each" : cities_documents}} }
-        )   
+            { "$addToSet": {"cities" : {"$each" : cities_documents}} },
+            upsert=True
+        )  
+
+        print(f"UPDATING STATE IN place collection WITH HREF: {state_href}")
+        placesCollection.update_one(
+            {"href" : state_href},
+            { "$addToSet": {"cities" : {"$each" : cities_documents}} },
+            upsert=True
+        )  
 
         #print(f"RETURNING FROM STATE WITH HREF: {state_href}")
         #return state_href, cities_documents
@@ -112,7 +97,7 @@ async def fetch_cities_for_state(state_href, page):
     finally:
         await page.close()
 
-async def scrape_multiple_states(state_and_hrefs, context, locationsCollection):
+async def scrape_multiple_states(state_and_hrefs, context):
     tasks = []
     pages = []
     for state_href in state_and_hrefs.values():
@@ -168,11 +153,11 @@ async def run(playwright: Playwright, locationsCollection) -> None:
     states_and_hrefs = await extract_state_hrefs(page, locationsCollection) 
     await page.close()
 
-    await scrape_multiple_states(states_and_hrefs, context, locationsCollection)
+    await scrape_multiple_states(states_and_hrefs, context)
     await context.close()
     await browser.close()
 
-async def main() -> None:
+async def wiki_main() -> None:
     import time
     async with async_playwright() as playwright:
 
@@ -181,7 +166,7 @@ async def main() -> None:
         end_time = time.time()
 
         total_time = end_time - start_time
-        print(f"The end time for crawling is: {total_time}")
+        print(f"The end time for wikipedia crawling is: {total_time}")
 
 # asyncio.run(main())
 
