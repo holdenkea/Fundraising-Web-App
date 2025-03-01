@@ -57,10 +57,10 @@ def create_app():
             return None
     
     #Scrapes wikipedia page about municipalities wikipedia page   
-    import werkzeug.serving
-    if not werkzeug.serving.is_running_from_reloader():
-        print("scrapeWiki call")
-        scrape_wiki_locations()
+    #import werkzeug.serving
+    #if not werkzeug.serving.is_running_from_reloader():
+    #    print("scrapeWiki call")
+    #    scrape_wiki_locations()
     
     return app
 
