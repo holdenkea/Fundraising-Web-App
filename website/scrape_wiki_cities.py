@@ -26,7 +26,7 @@ async def process_row(row):
     if city:
         city_document = {}
         city_document |= {'city' : city}
-        print(f"RETURNING CITY: {city} from process row")
+        # print(f"RETURNING CITY: {city} from process row")
         return city
 
     return None
@@ -108,7 +108,7 @@ async def scrape_multiple_states(state_and_hrefs, context):
 
     results = await asyncio.gather(*tasks)
         
-async def extract_state_hrefs(page, locationsCollection):
+async def extract_state_hrefs(page, locationsCollection, placesCollection):
     BASE_URL = "https://en.wikipedia.org"
 
     await page.goto(f"{BASE_URL}/wiki/Category:Lists_of_cities_in_the_United_States_by_state")
@@ -134,7 +134,7 @@ async def extract_state_hrefs(page, locationsCollection):
             # If href is found, store the state and href
             if href:
                 state_and_hrefs[state_name] = href
-                print(f"State: {state_name}, Href: {href}")
+                # print(f"State: {state_name}, Href: {href}")
 
                 if not locationsCollection.find_one({"state" : state_name}):
                     stateDocument = {}
@@ -142,15 +142,22 @@ async def extract_state_hrefs(page, locationsCollection):
                     stateDocument |= {'href' : href}
                     stateDocument |= {'cities' : []}
                     locationsCollection.insert_one(stateDocument)  
+                    
+                if not placesCollection.find_one({"state" : state_name}):
+                    stateDocument = {}
+                    stateDocument |= {'state' : state_name}
+                    stateDocument |= {'href' : href}
+                    stateDocument |= {'cities' : []}
+                    placesCollection.insert_one(stateDocument)
 
     return state_and_hrefs    
    
-async def run(playwright: Playwright, locationsCollection) -> None:
+async def run(playwright: Playwright, locationsCollection, placesCollection) -> None:
     browser = await playwright.chromium.launch(headless=False)
     context = await browser.new_context()
     page = await context.new_page()
 
-    states_and_hrefs = await extract_state_hrefs(page, locationsCollection) 
+    states_and_hrefs = await extract_state_hrefs(page, locationsCollection, placesCollection) 
     await page.close()
 
     await scrape_multiple_states(states_and_hrefs, context)
@@ -162,7 +169,7 @@ async def wiki_main() -> None:
     async with async_playwright() as playwright:
 
         start_time = time.time()
-        await run(playwright, locationsCollection)
+        await run(playwright, locationsCollection, placesCollection)
         end_time = time.time()
 
         total_time = end_time - start_time
@@ -170,11 +177,23 @@ async def wiki_main() -> None:
 
 # asyncio.run(main())
 
-#time to add to database no chunking for table
-#The end time for crawling is: 202.46524262428284
+# HEADLESS OFF
 
-#chunk size 10: 171
-#chunk size 50: 155
-#chunk size 30: 148.22796392440796
-#chunk size 23: 146.3689410686493
-#chunk size 18: 147.41725087165833
+    #time to add to database no chunking for table
+    #The end time for crawling is: 202.46524262428284
+
+    #chunk size 10: 171
+    #chunk size 50: 155
+    #chunk size 30: 148.22796392440796
+    #chunk size 23: 146.3689410686493
+    #chunk size 18: 147.41725087165833
+
+        # chunk size 23 with print statements and both place and location db updates:
+        # The end time for wikipedia crawling is: 161.66940665245056
+
+        # chunk size 23 without print statements for each city:
+        # The end time for wikipedia crawling is: 144.71464681625366
+
+        # chunk size 23 without all print statements:
+        # The end time for wikipedia crawling is: 170.78959703445435 ???? lol
+        # The end time for wikipedia crawling is: 169.70345783233643

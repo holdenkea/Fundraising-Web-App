@@ -31,8 +31,6 @@ def submit():
 
     # call scrape_maps_places function in scrape_google_places
     asyncio.run(google_main(city, state, place))
-
-    exit(3)
     #return f'State: {state}, City: {city}, Href: {cityHref}'
 
 #below routes bring the database states to be used in the frontend
