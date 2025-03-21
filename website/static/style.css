@@ -1,0 +1,50 @@
+*{
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    box-sizing: border-box;
+}
+body{
+    background: #ffffff;
+    color: #000000;
+}
+
+.row{
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+}
+
+
+
+/* Dark theme input fields */
+.form-control {
+    background-color: #ffffff; /* Dark gray */
+    color: rgb(0, 0, 0);
+    border: 1px solid #000000; /* Orange border */
+}
+
+.form-control:focus {
+    background-color: #ededed;
+    border-color: #000000;
+    box-shadow: 0 0 8px rgba(124, 48, 190, 0.5);
+}
+
+/* Custom button styling */
+.btn-primary {
+    background-color: #53176b !important; /* Orange */
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+}
+
+.btn-primary:hover {
+    background-color: #7f1d86 !important;
+}
+
+/* Style for the logo */
+.navbar-brand img {
+    width: 50px;
+    height: auto;
+}

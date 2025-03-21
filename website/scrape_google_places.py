@@ -2,6 +2,7 @@ import asyncio
 from playwright.async_api import Playwright, async_playwright
 from .db import placesCollection
 
+import random
 
 placeOptions = [
         "restaurants",
@@ -9,44 +10,128 @@ placeOptions = [
         "things to do"
     ]
 
-async def fetch_attributes_for_place(place, page):
+async def check_place_for_fundraising():
+    return
+
+async def get_place_attributes(place, context):
+    # place has 'name' key value pair and 'href' key value pair
+
+    # delay to try to avoid robot detection
+    delay = random.uniform(1,3)
+
+    await asyncio.sleep(delay)
+
+    page = await context.new_page()
+
+    name = place['name']
+    address = None
+    website = None
+    phone_number = None
+    plus_code = None
+
     try:
-        await page.goto(place)
+        #print(place)
+        try: 
+            # waiting for the page to load fo 10 seconds, if not skip
+            await page.goto(place['href'], timeout=30000)
+        except (TimeoutError):
+            return None
 
-        # wait for name to load
-            # add name to variable or to database     
-  
+        # Get viewport size directly from Playwright instead of using evaluate
+        viewport_size = page.viewport_size
+        
+        # Set the viewport to the maximum screen size of the machine
+        await page.set_viewport_size(viewport_size)
+
+        # Zoom out the page to 50% using CSS
+        await page.evaluate("document.body.style.zoom='50%'")
+
+        # Simulate a human-like refresh by clicking the refresh button (not reloading)
+        await page.keyboard.press('F5')  # Press 'F5' to refresh the page
+
+        # wait for sidebar to load
+        #sidebar = await page.query_selector("class=m6QErb WNBkOb XiKgde")
+
+        #uses CSS selector
+        sidebar = await page.query_selector(".XltNde.tTVLSc")
+
+        #if sidebar:
+        #    print("FOUND THE SIDEBAR")
+
         # wait for attribute table to load
-            # get all attributes that aren't none
+        # attribute_table = await sidebar.query_selector(".m6QErb.XiKgde")
 
-        # save attributes somewhere
+        # uses the XPATH where the class is the class's name and 
+        # it also has the aria label of Information for (place name)
+        # from the name variable
+        attribute_table = await sidebar.query_selector(f"xpath=//div[contains(@class, 'm6QErb XiKgde') and @aria-label=\"Information for {name}\"]")
 
-        # return list of attributes for a given place
+
+        # look for all of the button classes "CsEnBe" for the attribute table
+        if attribute_table:
+            print("FOUND THE ATTRIBUTE TABLE")
+
+            info_bars = await attribute_table.query_selector_all(".RcCsl.fVHpi.w4vB1d.NOE9ve.M0S7ae.AG25L")
+            
+            for bar in info_bars:
+
+                button = await bar.query_selector(".CsEnBe") 
+
+                if button:
+                    print("FOUND BUTTON")
+                    aria_label = await button.get_attribute("aria-label")
+
+                    if aria_label and "Address: " in aria_label:
+                        print("FOUND ADDRESS")
+                        address = aria_label.replace("Address: ", "")
+                    if aria_label and "Phone: " in aria_label:
+                        print("FOUND PHONE")
+                        phone_number = aria_label.replace("Phone: ", "")
+                    if aria_label and "Plus code: " in aria_label:
+                        print("FOUND PLUS CODE")
+                        plus_code = aria_label.replace("Plus code: ", "")
+                    if aria_label and "Website: " in aria_label:
+                        print("FOUND WEBSITE")
+                        website = aria_label.replace("Website: ", "https://")
+
+                        # CALL FUNCTION TO SCRAPE WEBSITE HERE
+
+
+                    #print(aria_label)
+
+
+        # ONCE WEBSITE FOUND MUST GO INTO WEBSITE
+        # AND LOOK FOR THE FUNDRAISING KEYWORDS
         
     finally:
         await page.close()
 
 async def scrape_multiple_places(place_previews, context):
-    tasks = []
-    pages = []
-    for place in place_previews:
-        page = await context.new_page()
-        pages.append(page)
-        task = fetch_attributes_for_place(place, page)
-        tasks.append(task)
 
-        # FOR EACH PLACE, RETURN A LIST OF ATTRIBUTES ALONG WITH THE WEBSITE
-        # ADD WEBSITE TO A LIST OF WEBSITES
-                     
-    results = await asyncio.gather(*tasks)
+# GOOGLE WILL BLOCK REQUESTS IF TOO MANY ARE SENT FROM THE SAME
+# CONTEXT AT ONCE
 
-    # WITH THE LIST OF WEBSITES CALL FUNCTION TO SEARCH EACH ONE FOR FUNDRAISING OR NOT
-    # for website in websites:
+# I NEED TO CHUNK THE PLACE PREVIEW URLs BEFORE I SEND IT TO THE
+# CHECK PLACE FOR FUNDRAISING FUNCTION
+
+    #pages = []
+
+    chunk_size = 15
+    chunks = [place_previews[i:i + chunk_size] for i in range(0, len(place_previews), chunk_size)]
+
+    for chunk in chunks:
+        tasks = []
+
+        for place in chunk:
         #page = await context.new_page()
         #pages.append(page)
-        #task = check_website_for_fundraising(website, page)
-        #tasks.append(task)
 
+            task = get_place_attributes(place, context)
+            tasks.append(task)
+
+        results = await asyncio.gather(*tasks)
+
+    return results
 
 async def begin_scraping_sidebar(page, city, state, place):
     query = f"{place} near {city} {state}"  
@@ -129,8 +214,9 @@ async def run(playwright: Playwright, placesCollection, city, state, place) -> N
 
     print(f"Found {len(place_previews)} places")
 
+    await scrape_multiple_places(place_previews, context)
 
-    
+
     # maybe first split the place_previews into chunks?
 
     # for each website in list of place previews
@@ -162,9 +248,16 @@ async def google_main(city, state, place) -> None:
         print(f"The end time for google maps crawling is: {total_time}")
     
 
-# just begin_scraping_sidebar
+
+# SIDEBAR CRAWLING TIMES AND GETTING WEBSITE ATTRIBUTE TIMES
+# Alameda, CA
+
+# Chunk size 10 - 119 seconds - no timeout
+# Chunk size 30 - timeout
+# Chunk size 15 - timeout again
 
 
+# SIDEBAR CRAWLING TIMES
 # Alameda, CA
 
     # 50% window size
@@ -192,3 +285,4 @@ async def google_main(city, state, place) -> None:
     # 50% again
     # Found 113 places
     # The end time for google maps crawling is: 31.776206493377686
+

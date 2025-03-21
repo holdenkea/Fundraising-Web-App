@@ -19,7 +19,10 @@
             href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
             crossorigin="anonymous"
         />
-    
+
+        <!style.css imported here>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
         <!JINGA feature here which uses the templating engine and can write things in the bracket percent percent bracket>
         <!the below block can be overridden in a child template, so any block defined in base template can be changed>
         <title>{% block title %}Home{% endblock %}</title>
@@ -27,6 +30,11 @@
     <body>
         <!bootstrap class>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <! Top Left Logo>
+            <a class="navbar-brand" href="#">
+                <img src="{{ url_for('static', filename='logo.jpg') }}" alt="Logo">
+            </a>
+            
             <!button that expands the nav bar on different devices>
             <button 
                 class="navbar-toggler" 
