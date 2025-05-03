@@ -2,7 +2,7 @@
 - [About](#about)
 - [Getting Started](#getting-started)
 - [Running](#running-the-program)
-- [Features](#Feature Demo)
+- [Features](#feature-demo)
   - [Signing Up](#signing-up)
   - [Logging In and Search Form](#logging-in-and-search-form)
   - [Fundraising Search Results](#fundraising-search-results)
