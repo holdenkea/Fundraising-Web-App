@@ -30,10 +30,18 @@ Visit http://localhost:5000
 
 ### Signing Up
 
-### User Info in Database
+https://github.com/user-attachments/assets/fae4a31c-a879-412e-8bb7-84815dea74af
 
-### Logging In
+### Logging In and Search Form
 
-### Fundraising Search
+https://github.com/user-attachments/assets/feed040e-dc48-4e2d-beef-3f27594f5ae0
 
+### Fundraising Search Results
 
+https://github.com/user-attachments/assets/65df222f-3f2c-4de6-b335-79bdfb8ec675
+
+### Verifying Results 
+
+https://github.com/user-attachments/assets/7391236a-9d4f-490d-b370-9b55ccc884bc
+
+### Database Structure
