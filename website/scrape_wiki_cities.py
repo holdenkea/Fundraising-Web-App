@@ -26,7 +26,6 @@ async def process_row(row):
     if city:
         city_document = {}
         city_document |= {'city' : city}
-        # print(f"RETURNING CITY: {city} from process row")
         return city
 
     return None
@@ -64,7 +63,6 @@ async def fetch_cities_for_state(state_href, page):
 
         for chunk in chunks:
             tasks = []
-            #cities_documents = []
 
             for row in chunk:
                 tasks.append(process_row(row))
@@ -175,25 +173,3 @@ async def wiki_main() -> None:
         total_time = end_time - start_time
         print(f"The end time for wikipedia crawling is: {total_time}")
 
-# asyncio.run(main())
-
-# HEADLESS OFF
-
-    #time to add to database no chunking for table
-    #The end time for crawling is: 202.46524262428284
-
-    #chunk size 10: 171
-    #chunk size 50: 155
-    #chunk size 30: 148.22796392440796
-    #chunk size 23: 146.3689410686493
-    #chunk size 18: 147.41725087165833
-
-        # chunk size 23 with print statements and both place and location db updates:
-        # The end time for wikipedia crawling is: 161.66940665245056
-
-        # chunk size 23 without print statements for each city:
-        # The end time for wikipedia crawling is: 144.71464681625366
-
-        # chunk size 23 without all print statements:
-        # The end time for wikipedia crawling is: 170.78959703445435 ???? lol
-        # The end time for wikipedia crawling is: 169.70345783233643

@@ -1,23 +1,23 @@
 # stores the views and url endpoints for frontend of website
 # this is where the standard routes go, i.e. homepage, etc. but NOT login, as it is related to auth
 
-from flask import Blueprint, render_template, jsonify, request
+from flask import Blueprint, render_template, jsonify, request, redirect, url_for
 from flask_login import login_required, current_user #current user used to detect if user is logged in or not
 from .scrape_google_places import google_main
 import asyncio
 
-
-# from website.fundscraper import placeOptions, buildMapsPlaceQuery
 from website.scrape_google_places import placeOptions
 from . import db
 
 views = Blueprint('views', __name__)  # sets up a Blueprint for flask application
 
+num_places = ["25", "50", "100", "all"]
+
 #route for the home page
 @views.route('/')   #homepage so we use slash '/' and will run the function everytime we go to the '/' route
 @login_required     #cannot get to home page unless you are logged in
 def home():
-    return render_template("home.html", user=current_user, places=placeOptions)
+    return render_template("home.html", user=current_user, places=placeOptions, numPlaces=num_places)
 
 #route for the submit button on the home page
 @views.route('/submit', methods=['POST'])
@@ -25,13 +25,12 @@ def submit():
     state = request.form.get('state')
     city = request.form.get('city')
     place = request.form.get('place')
-
-    #call buildMapsPlaceQuery in fundscraper
-    # buildMapsPlaceQuery(city, state, place) 
-
+    numPlaces = request.form.get('numPlaces')
+    
     # call scrape_maps_places function in scrape_google_places
-    asyncio.run(google_main(city, state, place))
-    #return f'State: {state}, City: {city}, Href: {cityHref}'
+    results = asyncio.run(google_main(city, state, place, numPlaces))
+
+    return jsonify(results)
 
 #below routes bring the database states to be used in the frontend
 @views.route('/states')

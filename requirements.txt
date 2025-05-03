@@ -3,3 +3,6 @@ Flask-Login==0.6.3
 Werkzeug==3.0.3
 pymongo==4.8.0
 selenium==4.23.0
+playwright
+beautifulsoup4
+

@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container">
-    <h1>Home</h1>
+    <h1 align="center" style="margin-top: 20px;">Search</h1>
     <form id="stateCityForm" action="/submit" method="POST">
         <input type="hidden" id="cityHref" name="cityHref">
 
@@ -28,7 +28,29 @@
                 {% endfor %}           
              </select>
         </div>
+        <div class="form-group">
+            <label for="numPlacesSelect">Places to check:</label>
+            <select id="numPlacesSelect" name="numPlaces" class="form-control" onchange="validateForm();">
+                <option value="" selected disabled>Select how many places you want to check</option>
+                {% for num in numPlaces %}
+                    <option value="{{ num }}">{{ num }}</option>
+                {% endfor %}           
+             </select>
+        </div>
         <button type="submit" id="submitButton" class="btn btn-primary" disabled>Submit</button>
+
+        <!-- Spinner -->
+        <div id="loadingSpinner" class="mt-3" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+            <span class="ml-2">Crawling Google Maps...</span>
+        </div>
+
+        <!-- success message -->
+        <div id="submitSuccess" class="alert alert-success mt-3" style="display: none;">
+            Done!
+        </div>
     </form>
 </div>
 
@@ -71,7 +93,7 @@
         const cities = await response.json();
 
         const citySelect = document.getElementById('citySelect');
-        citySelect.innerHTML = '<option value="">Select a city</option>'; // Reset options
+        citySelect.innerHTML = '<option value="">Type or select a city</option>'; // Reset options
 
         cities.forEach(city => {
             const option = document.createElement('option');
@@ -86,22 +108,86 @@
         });
     }
 
-    async function selectPlace(place) {
-        document.getElementById('placeSelect').value;
-    }
-
     async function validateForm() {
         const state = document.getElementById('stateSearch').value.trim();
         const city = document.getElementById('citySelect').value;
         const place = document.getElementById('placeSelect').value;
+        const numPlaces = document.getElementById('numPlacesSelect').value;
         const submitButton = document.getElementById('submitButton');
 
-        if (state !== "" && city !== "" && place != "") {
+        if (state !== "" && city !== "" && place != "" && numPlaces != "") {
             submitButton.disabled = false;
         } 
         else {
             submitButton.disabled = true;
         }
     }
+
+    document.getElementById('stateCityForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const loading = document.getElementById('loadingSpinner');
+        const success = document.getElementById('submitSuccess');
+        document.getElementById('submitButton').disabled = true;
+        loading.style.display = 'block';
+        success.style.display = 'none';
+
+        const formData = new FormData(this);
+
+        try {
+            const response = await fetch('/submit', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (response.ok) {
+                const results = await response.json();  // Parse JSON response
+
+                // Handle and display the results here
+                displayResults(results);  // Call function to display results on the page
+
+                success.style.display = 'block';
+            } else {
+                alert('Something went wrong with your submission.');
+            }
+        } 
+        catch (err) {
+            console.error(err);
+            alert('Error submitting form.');
+        } 
+        finally {
+            loading.style.display = 'none';
+        }
+    });
+
+    function displayResults(results) {
+    const resultContainer = document.createElement('div');
+    resultContainer.classList.add('result-container');
+    
+    // build the HTML output
+    let resultHtml = '<h3>Places with Fundraising:</h3><ul>';
+    
+    // format each document object
+    results.forEach(place_document => {
+        const types = place_document.types ? place_document.types.join(', ') : 'No types available';
+        
+        resultHtml += `
+            <li class="result-item">
+                <strong>Name:</strong> ${place_document.name}<br>
+                <strong>Fundraising Keywords Found:</strong> ${types}<br>
+                <strong>Website:</strong> <a href="${place_document.website}" target="_blank">${place_document.website}</a><br>
+                <strong>Address:</strong> ${place_document.address}<br>
+                <strong>Phone:</strong> ${place_document.phone}<br>
+                <strong>Plus Code:</strong> ${place_document.plus}<br>
+            </li>
+        `;
+    });
+    
+    resultHtml += '</ul>';
+    
+    // set the result HTML into the container and append it to the page
+    resultContainer.innerHTML = resultHtml;
+    document.querySelector('.container').appendChild(resultContainer);
+}
 </script>
 {% endblock %}

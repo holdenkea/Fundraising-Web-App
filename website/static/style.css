@@ -1,12 +1,12 @@
 *{
     margin: 0;
     padding: 0;
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Fira Code', monospace;
     box-sizing: border-box;
 }
 body{
-    background: #ffffff;
-    color: #000000;
+    background: #18181c;
+    color: #cfcccc;
 }
 
 .row{
@@ -15,24 +15,34 @@ body{
     padding: 10px 20px;
 }
 
-
+/* Query Results */
+.result-item {
+    margin-bottom: 20px;
+    padding: 15px;
+    border-bottom: 1px solid #ccc;
+}
 
 /* Dark theme input fields */
 .form-control {
-    background-color: #ffffff; /* Dark gray */
-    color: rgb(0, 0, 0);
-    border: 1px solid #000000; /* Orange border */
+    background-color: #000000; 
+    color: #cfcccc;
+    border: 1px solid #1b1b1b; 
 }
 
 .form-control:focus {
-    background-color: #ededed;
+    background-color: #2e1e36;
     border-color: #000000;
-    box-shadow: 0 0 8px rgba(124, 48, 190, 0.5);
+    box-shadow: 0 0 8px rgba(143, 105, 176, 0.5);
+}
+
+select.form-control option {
+    background-color: #131213;
+    color: #ebe3eb;
 }
 
 /* Custom button styling */
 .btn-primary {
-    background-color: #53176b !important; /* Orange */
+    background-color: #53176b !important; 
     border: none;
     color: white;
     padding: 10px 20px;
@@ -47,4 +57,8 @@ body{
 .navbar-brand img {
     width: 50px;
     height: auto;
+}
+
+.bg-black {
+    background-color: #000000;
 }
